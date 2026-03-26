@@ -9,12 +9,16 @@ datasource db {
 }
 
 model Post {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   originalUrl  String
-  shortCode    String   @unique
-  clickCount   Int      @default(0)
-  uniqueClicks Int      @default(0)
-  createdAt    DateTime @default(now())
+  shortCode    String    @unique
+  clickCount   Int       @default(0)
+  uniqueClicks Int       @default(0)
+  views        Int       @default(0)
+  conversions  Int       @default(0)
+  revenue      Float     @default(0)
+  lastClickedAt DateTime?
+  createdAt    DateTime  @default(now())
   clicks       Click[]
 }
 
@@ -23,6 +27,8 @@ model Click {
   postId    String
   ip        String
   userAgent String?
+  referer   String?
+  device    String?
   createdAt DateTime @default(now())
 
   post Post @relation(fields: [postId], references: [id])

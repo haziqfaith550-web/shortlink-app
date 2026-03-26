@@ -16,7 +16,6 @@ export async function GET(
     where: { shortCode: code },
   })
 
-  // PHASE 7 — FAILSAFE: link mati → redirect ke landing
   if (!post) {
     return NextResponse.redirect("https://cekpromo.store")
   }
@@ -24,10 +23,11 @@ export async function GET(
   const forwarded = req.headers.get("x-forwarded-for")
   const ip = forwarded ? forwarded.split(",")[0].trim() : "unknown"
   const ua = req.headers.get("user-agent") || ""
+  const referer = req.headers.get("referer") || "direct"
+  const device = /mobile/i.test(ua) ? "mobile" : "desktop"
 
-  // PHASE 6 — BOT FILTER: skip tracking for bots
+  // Bot filter — redirect tanpa tracking
   const isBot = BOT_PATTERNS.some((p) => ua.toLowerCase().includes(p))
-
   if (isBot) {
     return NextResponse.redirect(post.originalUrl, {
       headers: {
@@ -38,14 +38,12 @@ export async function GET(
     })
   }
 
-  // PHASE 4 — ANTI SPAM: 5-min cooldown per IP
+  // Anti-spam: 5-min cooldown per IP
   const lastClick = await prisma.click.findFirst({
     where: {
       postId: post.id,
       ip,
-      createdAt: {
-        gt: new Date(Date.now() - 1000 * 60 * 5),
-      },
+      createdAt: { gt: new Date(Date.now() - 1000 * 60 * 5) },
     },
   })
 
@@ -54,6 +52,8 @@ export async function GET(
       postId: post.id,
       ip,
       userAgent: ua || null,
+      referer,
+      device,
     },
   })
 
@@ -62,10 +62,10 @@ export async function GET(
     data: {
       clickCount: { increment: 1 },
       uniqueClicks: lastClick ? undefined : { increment: 1 },
+      lastClickedAt: new Date(),
     },
   })
 
-  // PHASE 1 — NO CACHE redirect
   return NextResponse.redirect(post.originalUrl, {
     headers: {
       "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
