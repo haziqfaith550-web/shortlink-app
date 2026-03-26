@@ -1,6 +1,11 @@
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
 
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
+const BOT_PATTERNS = ["bot", "crawler", "spider", "slurp", "mediapartners", "facebookexternalhit", "twitterbot"]
+
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ code: string }> }
@@ -11,14 +16,29 @@ export async function GET(
     where: { shortCode: code },
   })
 
+  // PHASE 7 — FAILSAFE: link mati → redirect ke landing
   if (!post) {
-    return new Response("Link not found", { status: 404 })
+    return NextResponse.redirect("https://cekpromo.store")
   }
 
   const forwarded = req.headers.get("x-forwarded-for")
   const ip = forwarded ? forwarded.split(",")[0].trim() : "unknown"
-  const userAgent = req.headers.get("user-agent") || "unknown"
+  const ua = req.headers.get("user-agent") || ""
 
+  // PHASE 6 — BOT FILTER: skip tracking for bots
+  const isBot = BOT_PATTERNS.some((p) => ua.toLowerCase().includes(p))
+
+  if (isBot) {
+    return NextResponse.redirect(post.originalUrl, {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+      },
+    })
+  }
+
+  // PHASE 4 — ANTI SPAM: 5-min cooldown per IP
   const lastClick = await prisma.click.findFirst({
     where: {
       postId: post.id,
@@ -33,7 +53,7 @@ export async function GET(
     data: {
       postId: post.id,
       ip,
-      userAgent,
+      userAgent: ua || null,
     },
   })
 
@@ -45,5 +65,12 @@ export async function GET(
     },
   })
 
-  return NextResponse.redirect(post.originalUrl)
+  // PHASE 1 — NO CACHE redirect
+  return NextResponse.redirect(post.originalUrl, {
+    headers: {
+      "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+      "Pragma": "no-cache",
+      "Expires": "0",
+    },
+  })
 }

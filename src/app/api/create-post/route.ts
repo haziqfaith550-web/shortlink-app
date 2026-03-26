@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
 
+export const dynamic = "force-dynamic"
+
 function generateCode(length = 6): string {
   const chars =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -24,6 +26,6 @@ export async function GET() {
 
   return NextResponse.json({
     shortlink: `/r/${post.shortCode}`,
-    full: `https://YOUR_DOMAIN/r/${post.shortCode}`,
+    full: `https://cekpromo.store/r/${post.shortCode}`,
   })
 }
