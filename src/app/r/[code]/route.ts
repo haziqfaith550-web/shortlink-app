@@ -66,7 +66,14 @@ export async function GET(
     },
   })
 
-  return NextResponse.redirect(post.originalUrl, {
+  let redirectUrl = post.originalUrl
+  if (post.isWinner) {
+    redirectUrl = post.originalUrl
+  } else if (post.isLoser) {
+    redirectUrl = "https://backup-affiliate-link.com"
+  }
+
+  return NextResponse.redirect(redirectUrl, {
     headers: {
       "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
       "Pragma": "no-cache",

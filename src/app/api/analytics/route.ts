@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
+import { calculateScore } from "@/lib/optimizer"
 
 export const dynamic = "force-dynamic"
 
@@ -11,9 +12,17 @@ export async function GET() {
     },
   })
 
-  const totalClicks = posts.reduce((sum, p) => sum + p.clickCount, 0)
-  const totalUnique = posts.reduce((sum, p) => sum + p.uniqueClicks, 0)
-  const totalRevenue = posts.reduce((sum, p) => sum + p.revenue, 0)
+  for (const p of posts) {
+    const score = calculateScore(p)
+    await prisma.post.update({
+      where: { id: p.id },
+      data: { score }
+    })
+  }
+
+  const totalClicks = posts.reduce((sum: number, p: any) => sum + p.clickCount, 0)
+  const totalUnique = posts.reduce((sum: number, p: any) => sum + p.uniqueClicks, 0)
+  const totalRevenue = posts.reduce((sum: number, p: any) => sum + p.revenue, 0)
 
   // Device breakdown dari semua clicks
   const deviceStats = await prisma.click.groupBy({

@@ -7,9 +7,9 @@ export default async function Dashboard() {
     orderBy: { clickCount: "desc" },
   })
 
-  const totalClicks = posts.reduce((s, p) => s + p.clickCount, 0)
-  const totalUnique = posts.reduce((s, p) => s + p.uniqueClicks, 0)
-  const totalRevenue = posts.reduce((s, p) => s + p.revenue, 0)
+  const totalClicks = posts.reduce((s: number, p: any) => s + p.clickCount, 0)
+  const totalUnique = posts.reduce((s: number, p: any) => s + p.uniqueClicks, 0)
+  const totalRevenue = posts.reduce((s: number, p: any) => s + p.revenue, 0)
 
   const deviceStats = await prisma.click.groupBy({
     by: ["device"],

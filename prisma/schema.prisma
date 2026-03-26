@@ -17,6 +17,9 @@ model Post {
   views        Int       @default(0)
   conversions  Int       @default(0)
   revenue      Float     @default(0)
+  score        Float     @default(0)
+  isWinner     Boolean   @default(false)
+  isLoser      Boolean   @default(false)
   lastClickedAt DateTime?
   createdAt    DateTime  @default(now())
   clicks       Click[]
