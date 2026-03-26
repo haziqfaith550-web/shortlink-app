@@ -22,13 +22,25 @@ export async function GET() {
             isLoser: false
           }
         })
+      }
 
-        // Phase 6: Auto Scale Winner
+      // Phase 6: Smart Scaling Limit
+      const todayCount = await prisma.post.count({
+        where: {
+          parentPostId: p.id,
+          createdAt: {
+            gt: new Date(Date.now() - 86400000)
+          }
+        }
+      })
+
+      if (todayCount < 3) {
         await prisma.post.create({
           data: {
             originalUrl: p.originalUrl,
             shortCode: generateNewCode(),
-            isWinner: true
+            isWinner: true,
+            parentPostId: p.id
           }
         })
       }

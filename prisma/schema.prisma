@@ -20,6 +20,7 @@ model Post {
   score        Float     @default(0)
   isWinner     Boolean   @default(false)
   isLoser      Boolean   @default(false)
+  parentPostId String?
   lastClickedAt DateTime?
   createdAt    DateTime  @default(now())
   clicks       Click[]

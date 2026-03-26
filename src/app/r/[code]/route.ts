@@ -47,6 +47,23 @@ export async function GET(
     },
   })
 
+  // Phase 4: Rate limit (Anti-bot)
+  const ipClicks = await prisma.click.count({
+    where: {
+      ip,
+      createdAt: {
+        gt: new Date(Date.now() - 10000)
+      }
+    }
+  })
+
+  if (ipClicks > 5) {
+    return NextResponse.redirect("https://cekpromo.store")
+  }
+
+  // Phase 5: Random human delay
+  await new Promise(r => setTimeout(r, 50 + Math.random() * 150))
+
   await prisma.click.create({
     data: {
       postId: post.id,
@@ -72,6 +89,10 @@ export async function GET(
   } else if (post.isLoser) {
     redirectUrl = "https://backup-affiliate-link.com"
   }
+
+  // Phase 3: Auto link variation (Anti-detection)
+  const randomParam = Math.random().toString(36).substring(2, 8)
+  redirectUrl += (redirectUrl.includes("?") ? "&" : "?") + "ref=" + randomParam
 
   return NextResponse.redirect(redirectUrl, {
     headers: {
